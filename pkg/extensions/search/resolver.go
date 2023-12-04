@@ -216,7 +216,7 @@ func getCVEListForImage(
 		return &gql_generated.CVEResultForImage{}, gqlerror.Errorf("no reference provided")
 	}
 
-	cveList, pageInfo, err := cveInfo.GetCVEListForImage(ctx, repo, ref, searchedCVE, pageInput)
+	cveList, severityCountersMap, pageInfo, err := cveInfo.GetCVEListForImage(ctx, repo, ref, searchedCVE, pageInput)
 	if err != nil {
 		return &gql_generated.CVEResultForImage{}, err
 	}
@@ -256,9 +256,18 @@ func getCVEListForImage(
 		)
 	}
 
+	severityCounters := make([]*gql_generated.SeverityCounter, 0, len(severityCountersMap))
+	for severity, count := range severityCountersMap {
+		severityCounters = append(severityCounters, &gql_generated.SeverityCounter{
+			Severity: severity,
+			Count:    count,
+		})
+	}
+
 	return &gql_generated.CVEResultForImage{
-		Tag:     &ref,
-		CVEList: cveids,
+		Tag:              &ref,
+		CVEList:          cveids,
+		SeverityCounters: severityCounters,
 		Page: &gql_generated.PageInfo{
 			TotalCount: pageInfo.TotalCount,
 			ItemCount:  pageInfo.ItemCount,

@@ -51,6 +51,7 @@ type PageFinder interface {
 	Add(cve cvemodel.CVE)
 	Page() ([]cvemodel.CVE, common.PageInfo)
 	Reset()
+	All() []cvemodel.CVE
 }
 
 // CvePageFinder implements PageFinder. It manages Cve objects and calculates the page
@@ -130,4 +131,8 @@ func (bpt *CvePageFinder) Page() ([]cvemodel.CVE, common.PageInfo) {
 	pageInfo.TotalCount = len(bpt.pageBuffer)
 
 	return cves, *pageInfo
+}
+
+func (bpt *CvePageFinder) All() []cvemodel.CVE {
+	return bpt.pageBuffer
 }

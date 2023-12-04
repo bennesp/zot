@@ -11,6 +11,20 @@ A timestamp
 scalar Time
 
 """
+Define how many vulnerabilities for the given severity exist
+"""
+type SeverityCounter {
+    """
+    The impact the CVE has, one of "UNKNOWN", "LOW", "MEDIUM", "HIGH", "CRITICAL"
+    """
+    Severity: String!
+    """
+    Count of all CVEs found in this image with the given severity
+    """
+    Count: Int!
+}
+
+"""
 Contains the tag of the image and a list of CVEs
 """
 type CVEResultForImage {
@@ -22,6 +36,10 @@ type CVEResultForImage {
     List of CVE objects which affect this specific image:tag
     """
     CVEList: [CVE]
+    """
+    Counters for the different severities of the CVEs
+    """
+    SeverityCounters: [SeverityCounter]
     """
     The CVE pagination information, see PageInfo object for more details
     """

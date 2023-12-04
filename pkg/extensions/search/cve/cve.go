@@ -23,7 +23,7 @@ type CveInfo interface {
 	GetImageListForCVE(ctx context.Context, repo, cveID string) ([]cvemodel.TagInfo, error)
 	GetImageListWithCVEFixed(ctx context.Context, repo, cveID string) ([]cvemodel.TagInfo, error)
 	GetCVEListForImage(ctx context.Context, repo, tag string, searchedCVE string, pageinput cvemodel.PageInput,
-	) ([]cvemodel.CVE, zcommon.PageInfo, error)
+	) ([]cvemodel.CVE, map[string]int, zcommon.PageInfo, error)
 	GetCVESummaryForImageMedia(ctx context.Context, repo, digest, mediaType string) (cvemodel.ImageCVESummary, error)
 }
 
@@ -349,35 +349,53 @@ func filterCVEList(cveMap map[string]cvemodel.CVE, searchedCVE string, pageFinde
 	}
 }
 
+func createSeverityCounters(pageFinder *CvePageFinder) map[string]int {
+	severityCounters := map[string]int{
+		cvemodel.SeverityCritical: 0,
+		cvemodel.SeverityHigh:     0,
+		cvemodel.SeverityMedium:   0,
+		cvemodel.SeverityLow:      0,
+	}
+
+	for _, cve := range pageFinder.All() {
+		if _, ok := severityCounters[cve.Severity]; ok {
+			severityCounters[cve.Severity]++
+		}
+	}
+
+	return severityCounters
+}
+
 func (cveinfo BaseCveInfo) GetCVEListForImage(ctx context.Context, repo, ref string, searchedCVE string,
 	pageInput cvemodel.PageInput,
 ) (
-	[]cvemodel.CVE, zcommon.PageInfo, error,
+	[]cvemodel.CVE, map[string]int, zcommon.PageInfo, error,
 ) {
 	isValidImage, err := cveinfo.Scanner.IsImageFormatScannable(repo, ref)
 	if !isValidImage {
 		cveinfo.Log.Debug().Str("image", repo+":"+ref).Err(err).Msg("image is not scanable")
 
-		return []cvemodel.CVE{}, zcommon.PageInfo{}, err
+		return []cvemodel.CVE{}, nil, zcommon.PageInfo{}, err
 	}
 
 	image := zcommon.GetFullImageName(repo, ref)
 
 	cveMap, err := cveinfo.Scanner.ScanImage(ctx, image)
 	if err != nil {
-		return []cvemodel.CVE{}, zcommon.PageInfo{}, err
+		return []cvemodel.CVE{}, nil, zcommon.PageInfo{}, err
 	}
 
 	pageFinder, err := NewCvePageFinder(pageInput.Limit, pageInput.Offset, pageInput.SortBy)
 	if err != nil {
-		return []cvemodel.CVE{}, zcommon.PageInfo{}, err
+		return []cvemodel.CVE{}, nil, zcommon.PageInfo{}, err
 	}
 
 	filterCVEList(cveMap, searchedCVE, pageFinder)
+	severityCounters := createSeverityCounters(pageFinder)
 
 	cveList, pageInfo := pageFinder.Page()
 
-	return cveList, pageInfo, nil
+	return cveList, severityCounters, pageInfo, nil
 }
 
 func (cveinfo BaseCveInfo) GetCVESummaryForImageMedia(ctx context.Context, repo, digest, mediaType string,

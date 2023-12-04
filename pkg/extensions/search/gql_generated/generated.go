@@ -60,9 +60,10 @@ type ComplexityRoot struct {
 	}
 
 	CVEResultForImage struct {
-		CVEList func(childComplexity int) int
-		Page    func(childComplexity int) int
-		Tag     func(childComplexity int) int
+		CVEList          func(childComplexity int) int
+		Page             func(childComplexity int) int
+		SeverityCounters func(childComplexity int) int
+		Tag              func(childComplexity int) int
 	}
 
 	GlobalSearchResult struct {
@@ -204,6 +205,11 @@ type ComplexityRoot struct {
 		Vendors       func(childComplexity int) int
 	}
 
+	SeverityCounter struct {
+		Count    func(childComplexity int) int
+		Severity func(childComplexity int) int
+	}
+
 	SignatureSummary struct {
 		Author    func(childComplexity int) int
 		IsTrusted func(childComplexity int) int
@@ -316,6 +322,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CVEResultForImage.Page(childComplexity), true
+
+	case "CVEResultForImage.SeverityCounters":
+		if e.complexity.CVEResultForImage.SeverityCounters == nil {
+			break
+		}
+
+		return e.complexity.CVEResultForImage.SeverityCounters(childComplexity), true
 
 	case "CVEResultForImage.Tag":
 		if e.complexity.CVEResultForImage.Tag == nil {
@@ -1031,6 +1044,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RepoSummary.Vendors(childComplexity), true
 
+	case "SeverityCounter.Count":
+		if e.complexity.SeverityCounter.Count == nil {
+			break
+		}
+
+		return e.complexity.SeverityCounter.Count(childComplexity), true
+
+	case "SeverityCounter.Severity":
+		if e.complexity.SeverityCounter.Severity == nil {
+			break
+		}
+
+		return e.complexity.SeverityCounter.Severity(childComplexity), true
+
 	case "SignatureSummary.Author":
 		if e.complexity.SignatureSummary.Author == nil {
 			break
@@ -1157,6 +1184,20 @@ A timestamp
 scalar Time
 
 """
+Define how many vulnerabilities for the given severity exist
+"""
+type SeverityCounter {
+    """
+    The impact the CVE has, one of "UNKNOWN", "LOW", "MEDIUM", "HIGH", "CRITICAL"
+    """
+    Severity: String!
+    """
+    Count of all CVEs found in this image with the given severity
+    """
+    Count: Int!
+}
+
+"""
 Contains the tag of the image and a list of CVEs
 """
 type CVEResultForImage {
@@ -1168,6 +1209,10 @@ type CVEResultForImage {
     List of CVE objects which affect this specific image:tag
     """
     CVEList: [CVE]
+    """
+    Counters for the different severities of the CVEs
+    """
+    SeverityCounters: [SeverityCounter]
     """
     The CVE pagination information, see PageInfo object for more details
     """
@@ -2744,6 +2789,53 @@ func (ec *executionContext) fieldContext_CVEResultForImage_CVEList(ctx context.C
 				return ec.fieldContext_CVE_PackageList(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type CVE", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CVEResultForImage_SeverityCounters(ctx context.Context, field graphql.CollectedField, obj *CVEResultForImage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CVEResultForImage_SeverityCounters(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SeverityCounters, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*SeverityCounter)
+	fc.Result = res
+	return ec.marshalOSeverityCounter2ᚕᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐSeverityCounter(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CVEResultForImage_SeverityCounters(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CVEResultForImage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Severity":
+				return ec.fieldContext_SeverityCounter_Severity(ctx, field)
+			case "Count":
+				return ec.fieldContext_SeverityCounter_Count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SeverityCounter", field.Name)
 		},
 	}
 	return fc, nil
@@ -5542,6 +5634,8 @@ func (ec *executionContext) fieldContext_Query_CVEListForImage(ctx context.Conte
 				return ec.fieldContext_CVEResultForImage_Tag(ctx, field)
 			case "CVEList":
 				return ec.fieldContext_CVEResultForImage_CVEList(ctx, field)
+			case "SeverityCounters":
+				return ec.fieldContext_CVEResultForImage_SeverityCounters(ctx, field)
 			case "Page":
 				return ec.fieldContext_CVEResultForImage_Page(ctx, field)
 			}
@@ -7381,6 +7475,94 @@ func (ec *executionContext) _RepoSummary_Rank(ctx context.Context, field graphql
 func (ec *executionContext) fieldContext_RepoSummary_Rank(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RepoSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SeverityCounter_Severity(ctx context.Context, field graphql.CollectedField, obj *SeverityCounter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SeverityCounter_Severity(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Severity, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SeverityCounter_Severity(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SeverityCounter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SeverityCounter_Count(ctx context.Context, field graphql.CollectedField, obj *SeverityCounter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SeverityCounter_Count(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Count, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SeverityCounter_Count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SeverityCounter",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -9506,6 +9688,8 @@ func (ec *executionContext) _CVEResultForImage(ctx context.Context, sel ast.Sele
 			out.Values[i] = ec._CVEResultForImage_Tag(ctx, field, obj)
 		case "CVEList":
 			out.Values[i] = ec._CVEResultForImage_CVEList(ctx, field, obj)
+		case "SeverityCounters":
+			out.Values[i] = ec._CVEResultForImage_SeverityCounters(ctx, field, obj)
 		case "Page":
 			out.Values[i] = ec._CVEResultForImage_Page(ctx, field, obj)
 		default:
@@ -10545,6 +10729,50 @@ func (ec *executionContext) _RepoSummary(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._RepoSummary_IsStarred(ctx, field, obj)
 		case "Rank":
 			out.Values[i] = ec._RepoSummary_Rank(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var severityCounterImplementors = []string{"SeverityCounter"}
+
+func (ec *executionContext) _SeverityCounter(ctx context.Context, sel ast.SelectionSet, obj *SeverityCounter) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, severityCounterImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SeverityCounter")
+		case "Severity":
+			out.Values[i] = ec._SeverityCounter_Severity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "Count":
+			out.Values[i] = ec._SeverityCounter_Count(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12006,6 +12234,54 @@ func (ec *executionContext) marshalORepoSummary2ᚖzotregistryᚗioᚋzotᚋpkg�
 		return graphql.Null
 	}
 	return ec._RepoSummary(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOSeverityCounter2ᚕᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐSeverityCounter(ctx context.Context, sel ast.SelectionSet, v []*SeverityCounter) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOSeverityCounter2ᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐSeverityCounter(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOSeverityCounter2ᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐSeverityCounter(ctx context.Context, sel ast.SelectionSet, v *SeverityCounter) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._SeverityCounter(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOSignatureSummary2ᚕᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐSignatureSummary(ctx context.Context, sel ast.SelectionSet, v []*SignatureSummary) graphql.Marshaler {

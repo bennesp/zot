@@ -41,6 +41,8 @@ type CVEResultForImage struct {
 	Tag *string `json:"Tag,omitempty"`
 	// List of CVE objects which affect this specific image:tag
 	CVEList []*Cve `json:"CVEList,omitempty"`
+	// Counters for the different severities of the CVEs
+	SeverityCounters []*SeverityCounter `json:"SeverityCounters,omitempty"`
 	// The CVE pagination information, see PageInfo object for more details
 	Page *PageInfo `json:"Page,omitempty"`
 }
@@ -297,6 +299,14 @@ type RepoSummary struct {
 	IsStarred *bool `json:"IsStarred,omitempty"`
 	// Rank represents how good the match was between the queried repo name and this repo summary.
 	Rank *int `json:"Rank,omitempty"`
+}
+
+// Define how many vulnerabilities for the given severity exist
+type SeverityCounter struct {
+	// The impact the CVE has, one of "UNKNOWN", "LOW", "MEDIUM", "HIGH", "CRITICAL"
+	Severity string `json:"Severity"`
+	// Count of all CVEs found in this image with the given severity
+	Count int `json:"Count"`
 }
 
 // Contains details about the signature
